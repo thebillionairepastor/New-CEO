@@ -11,7 +11,7 @@ import {
 import { ChatMessage } from "../types";
 
 const FLASH_MODEL = 'gemini-3-flash-preview';
-const PRO_MODEL = 'gemini-3-pro-preview';
+const PRO_MODEL = 'gemini-3.1-pro-preview';
 
 const getAIClient = () => {
   return new GoogleGenAI({ apiKey: process.env.API_KEY || '' });

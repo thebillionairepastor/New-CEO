@@ -25,7 +25,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className 
             <blockquote className="border-l-4 border-blue-600/50 pl-4 my-4 italic text-slate-400 bg-blue-600/5 py-3 pr-3 rounded-r-xl border-dashed" {...props} />
           ),
           a: ({node, ...props}) => <a className="text-blue-400 hover:text-blue-300 underline font-bold transition-colors" target="_blank" rel="noopener noreferrer" {...props} />,
-          code: ({node, inline, className, children, ...props}) => {
+          code: ({node, className, children, ...props}) => {
             const isInline = !className?.includes('language-');
             return isInline ? (
               <code className="bg-slate-900/80 text-blue-400 px-1.5 py-0.5 rounded font-mono text-[0.85em] border border-slate-700/50" {...props}>
