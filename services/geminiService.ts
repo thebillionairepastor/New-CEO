@@ -10,8 +10,8 @@ import {
 } from "../constants";
 import { ChatMessage } from "../types";
 
-const FLASH_MODEL = 'gemini-3-flash-preview';
-const PRO_MODEL = 'gemini-3-flash-preview'; // Switched from 3.1-pro to avoid strict free-tier quotas
+const FLASH_MODEL = 'gemini-3.1-flash-lite-preview';
+const PRO_MODEL = 'gemini-3.1-flash-lite-preview'; // Switched to lite for maximum speed
 
 const getAIClient = () => {
   return new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
@@ -109,7 +109,6 @@ export const generateAdvisorStream = async (
       history: chatHistory,
       config: {
         systemInstruction: SYSTEM_INSTRUCTION_ADVISOR,
-        tools: [{ googleSearch: {} }],
         thinkingConfig: { thinkingLevel: ThinkingLevel.LOW }
       }
     });
