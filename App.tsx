@@ -212,12 +212,17 @@ function App() {
   }, [isListening]);
 
   const handleError = (error: any) => {
+    const errorString = typeof error === 'string' ? error : JSON.stringify(error);
     const errorMsg = error?.message || "Operational system delay. Retrying...";
-    if (errorMsg.includes("saturated") || errorMsg.includes("congested")) {
-        showNotification(errorMsg, "warning");
+    
+    if (errorString.toUpperCase().includes('RESOURCE_EXHAUSTED') || errorString.includes('429')) {
+      setApiError("Tactical Core Quota Exceeded. The system is currently at capacity. Please wait 60 seconds or upgrade your API key for higher throughput.");
+      showNotification("System Saturation: Quota Limit Reached", "warning");
+    } else if (errorMsg.includes("saturated") || errorMsg.includes("congested")) {
+      showNotification(errorMsg, "warning");
     } else {
-        setApiError(errorMsg);
-        setTimeout(() => setApiError(null), 6000);
+      setApiError(errorMsg);
+      setTimeout(() => setApiError(null), 8000);
     }
   };
 

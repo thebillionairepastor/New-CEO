@@ -11,22 +11,24 @@ import {
 import { ChatMessage } from "../types";
 
 const FLASH_MODEL = 'gemini-3-flash-preview';
-const PRO_MODEL = 'gemini-3.1-pro-preview';
+const PRO_MODEL = 'gemini-3-flash-preview'; // Switched from 3.1-pro to avoid strict free-tier quotas
 
 const getAIClient = () => {
   return new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 };
 
 const isQuotaError = (error: any): boolean => {
-  const msg = JSON.stringify(error).toUpperCase() + (error?.message?.toUpperCase() || "");
+  const errorString = typeof error === 'string' ? error : JSON.stringify(error);
+  const msg = errorString.toUpperCase() + (error?.message?.toUpperCase() || "");
   return (
     msg.includes('RESOURCE_EXHAUSTED') || 
     msg.includes('429') || 
-    msg.includes('QUOTA')
+    msg.includes('QUOTA') ||
+    msg.includes('RATE_LIMIT')
   );
 };
 
-async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
+async function withRetry<T>(fn: () => Promise<T>, maxRetries = 4): Promise<T> {
   let attempt = 0;
   const execute = async (): Promise<T> => {
     try {
@@ -34,7 +36,16 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
     } catch (error: any) {
       if (isQuotaError(error) && attempt < maxRetries) {
         attempt++;
-        const delay = Math.pow(2, attempt) * 1000;
+        // Try to extract retry delay from error message if possible (e.g., "retry in 18s")
+        let delay = Math.pow(3, attempt) * 2000; // 6s, 18s, 54s, 162s
+        
+        const errorString = JSON.stringify(error);
+        const retryMatch = errorString.match(/retry in ([\d.]+)s/i) || errorString.match(/retryDelay":\s*"(\d+)s"/i);
+        if (retryMatch && retryMatch[1]) {
+          delay = (parseFloat(retryMatch[1]) + 1) * 1000;
+        }
+        
+        console.warn(`Quota hit, retrying in ${delay}ms (attempt ${attempt})`);
         await new Promise(resolve => setTimeout(resolve, delay));
         return execute();
       }
@@ -50,12 +61,12 @@ export const analyzeReportStream = async (
   onChunk: (text: string) => void,
   onComplete: (fullText: string) => void
 ) => {
-  const ai = getAIClient();
-  let systemInstruction = SYSTEM_INSTRUCTION_AUDIT_TACTICAL;
-  if (type === 'CHECKLIST') systemInstruction = SYSTEM_INSTRUCTION_CHECKLIST_AUDIT;
-  else if (type === 'INCIDENT') systemInstruction = SYSTEM_INSTRUCTION_INCIDENT_AUDIT;
+  const execute = async () => {
+    const ai = getAIClient();
+    let systemInstruction = SYSTEM_INSTRUCTION_AUDIT_TACTICAL;
+    if (type === 'CHECKLIST') systemInstruction = SYSTEM_INSTRUCTION_CHECKLIST_AUDIT;
+    else if (type === 'INCIDENT') systemInstruction = SYSTEM_INSTRUCTION_INCIDENT_AUDIT;
 
-  try {
     const responseStream = await ai.models.generateContentStream({
       model: PRO_MODEL,
       contents: reportText,
@@ -68,6 +79,10 @@ export const analyzeReportStream = async (
       onChunk(fullText);
     }
     onComplete(fullText);
+  };
+
+  try {
+    await withRetry(execute);
   } catch (error) {
     throw error;
   }
@@ -79,13 +94,13 @@ export const generateAdvisorStream = async (
   onChunk: (text: string) => void,
   onComplete: (sources?: Array<{ title: string; url: string }>) => void
 ) => {
-  const ai = getAIClient();
-  const chatHistory = history.map(msg => ({
-    role: msg.role,
-    parts: [{ text: msg.text }]
-  }));
+  const execute = async () => {
+    const ai = getAIClient();
+    const chatHistory = history.map(msg => ({
+      role: msg.role,
+      parts: [{ text: msg.text }]
+    }));
 
-  try {
     const chat = ai.chats.create({
       model: PRO_MODEL,
       history: chatHistory,
@@ -110,6 +125,10 @@ export const generateAdvisorStream = async (
       if (sources && sources.length > 0) finalSources = sources;
     }
     onComplete(finalSources);
+  };
+
+  try {
+    await withRetry(execute);
   } catch (error) {
     throw error;
   }
@@ -120,8 +139,8 @@ export const fetchBestPracticesStream = async (
   onChunk: (text: string) => void,
   onComplete: (sources?: Array<{ title: string; url: string }>) => void
 ) => {
-  const ai = getAIClient();
-  try {
+  const execute = async () => {
+    const ai = getAIClient();
     const responseStream = await ai.models.generateContentStream({
       model: FLASH_MODEL,
       contents: `Provide 10 critical updates for Nigerian Security CEOs regarding ${topic || 'Compliance, Licensing, and NSCDC Rules'}.`,
@@ -141,6 +160,10 @@ export const fetchBestPracticesStream = async (
       if (sources && sources.length > 0) finalSources = sources;
     }
     onComplete(finalSources);
+  };
+
+  try {
+    await withRetry(execute);
   } catch (error) {
     throw error;
   }
@@ -165,8 +188,8 @@ export const generateTrainingModuleStream = async (
   onChunk: (text: string) => void,
   onComplete: () => void
 ) => {
-  const ai = getAIClient();
-  try {
+  const execute = async () => {
+    const ai = getAIClient();
     const responseStream = await ai.models.generateContentStream({
       model: PRO_MODEL,
       contents: `Architect Week ${week} syllabus for ${role} focusing on ${topic}.`,
@@ -179,6 +202,10 @@ export const generateTrainingModuleStream = async (
       onChunk(fullText);
     }
     onComplete();
+  };
+
+  try {
+    await withRetry(execute);
   } catch (error) {
     throw error;
   }
@@ -186,15 +213,13 @@ export const generateTrainingModuleStream = async (
 
 export const getSuggestedTopics = async (query: string): Promise<string[]> => {
   if (!query || query.length < 3) return [];
-  const ai = getAIClient();
-  try {
+  return withRetry(async () => {
+    const ai = getAIClient();
     const response = await ai.models.generateContent({
       model: FLASH_MODEL,
       contents: `3 security training topics for "${query}". Return as comma-separated list.`,
       config: { responseMimeType: "text/plain" }
     });
     return (response.text || "").split(',').map(s => s.trim()).filter(Boolean);
-  } catch (e) {
-    return [];
-  }
+  });
 };
