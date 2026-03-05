@@ -1,4 +1,4 @@
-import { GoogleGenAI, GenerateContentResponse, Type } from "@google/genai";
+import { GoogleGenAI, GenerateContentResponse, Type, ThinkingLevel } from "@google/genai";
 import { 
   SYSTEM_INSTRUCTION_ADVISOR, 
   SYSTEM_INSTRUCTION_TRAINER, 
@@ -70,7 +70,10 @@ export const analyzeReportStream = async (
     const responseStream = await ai.models.generateContentStream({
       model: PRO_MODEL,
       contents: reportText,
-      config: { systemInstruction }
+      config: { 
+        systemInstruction,
+        thinkingConfig: { thinkingLevel: ThinkingLevel.LOW }
+      }
     });
 
     let fullText = "";
@@ -106,7 +109,8 @@ export const generateAdvisorStream = async (
       history: chatHistory,
       config: {
         systemInstruction: SYSTEM_INSTRUCTION_ADVISOR,
-        tools: [{ googleSearch: {} }]
+        tools: [{ googleSearch: {} }],
+        thinkingConfig: { thinkingLevel: ThinkingLevel.LOW }
       }
     });
 
@@ -147,6 +151,7 @@ export const fetchBestPracticesStream = async (
       config: { 
         systemInstruction: SYSTEM_INSTRUCTION_GLOBAL_TRENDS,
         tools: [{ googleSearch: {} }],
+        thinkingConfig: { thinkingLevel: ThinkingLevel.LOW }
       }
     });
 
@@ -175,7 +180,10 @@ export const generateWeeklyTip = async (): Promise<string> => {
     const response = await ai.models.generateContent({
       model: FLASH_MODEL,
       contents: "Strategic executive directive.",
-      config: { systemInstruction: SYSTEM_INSTRUCTION_WEEKLY_TIP }
+      config: { 
+        systemInstruction: SYSTEM_INSTRUCTION_WEEKLY_TIP,
+        thinkingConfig: { thinkingLevel: ThinkingLevel.LOW }
+      }
     });
     return response.text || "Drafting Focus...";
   });
@@ -193,7 +201,10 @@ export const generateTrainingModuleStream = async (
     const responseStream = await ai.models.generateContentStream({
       model: PRO_MODEL,
       contents: `Architect Week ${week} syllabus for ${role} focusing on ${topic}.`,
-      config: { systemInstruction: SYSTEM_INSTRUCTION_TRAINER }
+      config: { 
+        systemInstruction: SYSTEM_INSTRUCTION_TRAINER,
+        thinkingConfig: { thinkingLevel: ThinkingLevel.LOW }
+      }
     });
 
     let fullText = "";
