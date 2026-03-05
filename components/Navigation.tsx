@@ -68,7 +68,7 @@ const Navigation: React.FC<NavigationProps> = ({
             </button>
           </div>
 
-          <nav className="flex-1 py-4 px-2.5 sm:py-6 sm:px-4 space-y-1 overflow-y-auto scrollbar-hide">
+          <nav className="flex-1 py-4 px-2.5 sm:py-6 sm:px-4 space-y-1 overflow-y-auto">
             {navItems.map((item) => {
               const isActive = currentView === item.id;
               const Icon = item.icon;

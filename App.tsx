@@ -558,7 +558,7 @@ function App() {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 lg:p-14 scrollbar-hide pb-20 sm:pb-24">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 lg:p-14 pb-20 sm:pb-24 overscroll-contain">
           
           {notification && (
             <div className="fixed top-20 sm:top-24 left-1/2 -translate-x-1/2 z-[150] animate-in slide-in-from-top-4 duration-300 pointer-events-none w-full max-w-xs sm:max-w-md px-4">
@@ -640,7 +640,7 @@ function App() {
           )}
 
           {currentView === View.ADVISOR && (
-            <div className="max-w-4xl mx-auto flex flex-col h-[75vh] sm:h-[78vh] md:h-[82vh] bg-[#1b2537] rounded-3xl sm:rounded-[2.5rem] border border-slate-800 overflow-hidden shadow-2xl relative animate-in fade-in">
+            <div className="max-w-4xl mx-auto flex flex-col h-[70vh] sm:h-[75vh] md:h-[80vh] bg-[#1b2537] rounded-3xl sm:rounded-[2.5rem] border border-slate-800 overflow-hidden shadow-2xl relative animate-in fade-in">
               <div className="flex flex-col">
                 <div className="p-4 sm:p-6 pb-0">
                   <ViewHeader 
@@ -679,7 +679,7 @@ function App() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-8 sm:space-y-12 scrollbar-hide">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-8 sm:space-y-12 overscroll-contain">
                 {displayedMessages.length === 0 && advisorTab === 'PINNED' && (
                   <div className="h-full flex flex-col items-center justify-center text-center p-6 sm:p-10 opacity-40">
                     <PinOff size={40} className="mb-4" />
@@ -962,7 +962,7 @@ function App() {
                               />
                             </div>
                           </div>
-                          <div className="bg-slate-900/40 rounded-2xl p-4 sm:p-6 max-h-[250px] overflow-y-auto scrollbar-hide border border-slate-800/30">
+                          <div className="bg-slate-900/40 rounded-2xl p-4 sm:p-6 max-h-[250px] overflow-y-auto border border-slate-800/30">
                             <MarkdownRenderer content={module.content} />
                           </div>
                         </div>
@@ -1028,7 +1028,7 @@ function App() {
                 <div className="lg:col-span-2 space-y-6 sm:space-y-8">
                   <h3 className="text-xl sm:text-2xl font-black uppercase flex items-center gap-3 tracking-tighter"><ShieldCheck className="text-emerald-500 shrink-0" size={24} /> Audit Core</h3>
                   <div className="bg-[#1b2537] rounded-3xl sm:rounded-[2.5rem] border border-slate-700/50 p-6 sm:p-10 shadow-2xl">
-                    <textarea value={reportText} onChange={e => setReportText(e.target.value)} className="w-full bg-slate-900 rounded-2xl sm:rounded-3xl p-5 sm:p-8 text-xs sm:text-base border-none focus:ring-1 focus:ring-emerald-500 outline-none h-48 sm:h-64 mb-4 sm:mb-6 scrollbar-hide resize-none transition-all placeholder:text-slate-700" placeholder="Paste daily logs for risk auditing..." />
+                    <textarea value={reportText} onChange={e => setReportText(e.target.value)} className="w-full bg-slate-900 rounded-2xl sm:rounded-3xl p-5 sm:p-8 text-xs sm:text-base border-none focus:ring-1 focus:ring-emerald-500 outline-none h-48 sm:h-64 mb-4 sm:mb-6 resize-none transition-all placeholder:text-slate-700" placeholder="Paste daily logs for risk auditing..." />
                     <button onClick={handleAnalyzeReport} disabled={isAnalyzing || !reportText.trim()} className="w-full bg-emerald-600 py-4 sm:py-5 rounded-xl sm:rounded-2xl font-black uppercase tracking-widest hover:bg-emerald-500 transition-all shadow-xl active:scale-95 text-xs sm:text-sm">Execute Audit</button>
                   </div>
                   {analysisResult && (
@@ -1159,7 +1159,7 @@ function App() {
                         
                         {editingTipId === tip.id ? (
                           <div className="space-y-4 animate-in fade-in duration-300">
-                            <textarea value={editedContent} onChange={(e) => setEditedContent(e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-[12px] text-slate-300 min-h-[200px] sm:min-h-[300px] focus:ring-1 focus:ring-blue-500 outline-none scrollbar-hide resize-none font-mono" placeholder="Strategy content..." />
+                            <textarea value={editedContent} onChange={(e) => setEditedContent(e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-[12px] text-slate-300 min-h-[200px] sm:min-h-[300px] focus:ring-1 focus:ring-blue-500 outline-none resize-none font-mono" placeholder="Strategy content..." />
                             <div className="flex gap-2"><button onClick={() => handleUpdateTip(tip.id)} className="flex-1 bg-blue-600 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-blue-500"><Save size={12} /> Save</button><button onClick={() => setEditingTipId(null)} className="px-4 bg-slate-800 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white">Cancel</button></div>
                           </div>
                         ) : (
